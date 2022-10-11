@@ -6,7 +6,7 @@ module CSRRegs(
     input[31:0] wdata,
     input csr_w,
     input[1:0] csr_wsc_mode,
-    input trap_begin,
+    input trap_begin, trap_end,
     input [31:0] PC_cur,
     output[31:0] rdata,
     output[31:0] mstatus,
@@ -30,10 +30,17 @@ module CSRRegs(
 
     assign rdata = CSR[raddr_map];
 
-    always @(trap_begin) begin
+    reg tmp_begin;
+    always @(posedge trap_begin) begin
         CSR[9] = PC_cur;
         CSR[0][7] = CSR[0][3];
         CSR[0][3] = 1'b0;
+    end
+
+    reg tmp_end;
+    always @(posedge trap_end) begin
+        CSR[0][3] = CSR[0][7];
+        CSR[0][7] = 1'b1;
     end
 
     always@(posedge clk or posedge rst) begin
