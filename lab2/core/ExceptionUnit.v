@@ -43,10 +43,11 @@ module ExceptionUnit(
     wire [31:0] mstatus, mtvec, mepc;
 
     reg trap_begin, trap_end;
+    reg [31:0] cause;
 
     CSRRegs csr(.clk(clk),.rst(rst),.csr_w(csr_rw_in),.raddr(csr_rw_addr_in),.waddr(csr_rw_addr_in), .trap_begin(trap_begin), .trap_end(trap_end),
         .wdata(csr_wdata),.rdata(csr_r_data_out),.csr_wsc_mode(csr_wsc_mode_in),
-        .PC_cur(epc_cur),
+        .PC_cur(epc_cur),.cause(cause),
         .mstatus(mstatus),.mtvec(mtvec),.mepc(mepc));
 
     always @(posedge clk or posedge rst) begin
@@ -60,6 +61,11 @@ module ExceptionUnit(
             redirect_mux = 1'b0;
         end
         else if (mstatus[3] == 1'b1 && (interrupt || illegal_inst || l_access_fault || s_access_fault || ecall_m)) begin
+            if (interrupt == 1'b1) cause = 32'h80000000;
+            else if (illegal_inst == 1'b1) cause = 32'h00000002;
+            else if (l_access_fault == 1'b1) cause = 32'h00000005;
+            else if (s_access_fault == 1'b1) cause = 32'h00000007;
+            else cause = 32'h0000000b;
             trap_begin = 1'b1; trap_end = 1'b0;
             reg_FD_flush = 1'b1;
             reg_DE_flush = 1'b1;
