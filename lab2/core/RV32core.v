@@ -176,8 +176,8 @@ module  RV32core(
         .epc_next(~isFlushed_MEM ? PC_MEM : ~isFlushed_EXE ? PC_EXE :
         ~isFlushed_ID ? PC_ID : PC_IF),
         .PC_redirect(PC_redirect_exp),.redirect_mux(redirect_mux_exp),
-        .reg_FD_flush(reg_FD_flush_exp),.reg_DE_flush(reg_DE_flush_exp),
-        .reg_EM_flush(reg_EM_flush_exp),.reg_MW_flush(reg_MW_flush_exp),
+        .FD_flush(reg_FD_flush_exp),.DE_flush(reg_DE_flush_exp),
+        .EM_flush(reg_EM_flush_exp),.MW_flush(reg_MW_flush_exp),
         .RegWrite_cancel(RegWrite_cancel_exp));
     
     MUX2T1_32 mux_csrout(.I0(RAMout_MEM),.I1(CSRout_MEM),.s(csr_rw_MEM),.o(Datain_MEM));
