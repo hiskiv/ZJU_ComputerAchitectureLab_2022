@@ -7,8 +7,6 @@ module CSRRegs(
     input csr_w, csr_w2,
     input[1:0] csr_wsc_mode, csr_wsc_mode2,
     input trap_begin, trap_end,
-    // input [2:0] cause,
-    // input [31:0] PC_cur,
     output[31:0] rdata,
     output[31:0] mstatus,
     output[31:0] mtvec,
@@ -29,6 +27,7 @@ module CSRRegs(
     assign mepc = CSR[9];
     // mepc: 9
     // mtvec: 5
+    // mcause: 10
 
     assign rdata = CSR[raddr_map];
 

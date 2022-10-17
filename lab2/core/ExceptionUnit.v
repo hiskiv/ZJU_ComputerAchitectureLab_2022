@@ -52,6 +52,7 @@ module ExceptionUnit(
     wire [31:0] mstatus, mtvec, mepc;
 
     reg trap_begin, trap_end;
+    reg [31:0] cause;
 
     CSRRegs csr(.clk(clk),.rst(rst),.raddr(csr_rw_addr_in),.rdata(csr_r_data_out),
         .csr_w(csr_w1),.waddr(csr_waddr1),.wdata(csr_wdata),.csr_wsc_mode(csr_wmode),
