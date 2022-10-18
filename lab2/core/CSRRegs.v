@@ -7,8 +7,6 @@ module CSRRegs(
     input csr_w, csr_w2,
     input[1:0] csr_wsc_mode, csr_wsc_mode2,
     input trap_begin, trap_end,
-    // input [2:0] cause,
-    // input [31:0] PC_cur,
     output[31:0] rdata,
     output[31:0] mstatus,
     output[31:0] mtvec,
@@ -24,13 +22,14 @@ module CSRRegs(
     wire[3:0] waddr_map = (waddr[6] << 3) + waddr[2:0];
     wire[3:0] waddr_map2 = (waddr2[6] << 3) + waddr2[2:0];
 
+    assign rdata = CSR[raddr_map];
+    
     assign mstatus = CSR[0];
     assign mtvec = CSR[5];
     assign mepc = CSR[9];
     // mepc: 9
     // mtvec: 5
 
-    assign rdata = CSR[raddr_map];
 
     always@(posedge clk or posedge rst) begin
         if(rst) begin

@@ -67,7 +67,7 @@ module ExceptionUnit(
             trap_begin = 1'b1; trap_end = 1'b0;
             PC_redirect = mtvec;
         end
-        else if (mret == 1'b1 && trap_end == 1'b0) begin
+        else if (mret == 1'b1 && mstatus[3] == 1'b0 && trap_end == 1'b0) begin
             trap_begin = 1'b0; trap_end = 1'b1;
             PC_redirect = mepc;
         end
@@ -79,8 +79,8 @@ module ExceptionUnit(
     assign FD_flush = (trap_begin == 1'b1 || trap_end == 1'b1) ? 1'b1 : 1'b0;
     assign DE_flush = (trap_begin == 1'b1 || trap_end == 1'b1) ? 1'b1 : 1'b0;
     assign EM_flush = (trap_begin == 1'b1 || trap_end == 1'b1) ? 1'b1 : 1'b0;
-    assign MW_flush = (trap_begin == 1'b1 || trap_end == 1'b1) ? 1'b1 : 1'b0;
-    assign RegWrite_cancel = (trap_begin == 1'b1 || trap_end == 1'b1) ? 1'b1 : 1'b0;
+    assign MW_flush = (trap_begin == 1'b1) ? 1'b1 : 1'b0;
+    assign RegWrite_cancel = (trap_begin == 1'b1) ? 1'b1 : 1'b0;
     assign redirect_mux = (trap_begin == 1'b1 || trap_end == 1'b1) ? 1'b1 : 1'b0;
 
 endmodule
