@@ -54,33 +54,35 @@ module cache (
     wire [ELEMENT_INDEX_WIDTH+ELEMENT_WORDS_WIDTH-1:0] addr_word1;
     wire [ELEMENT_INDEX_WIDTH+ELEMENT_WORDS_WIDTH-1:0] addr_word2; // element index + word index
 
-    assign addr_tag = ;             //need to fill in
-    assign addr_index = ;           //need to fill in
-    assign addr_element1 = {addr_index, 1'b0};
-    assign addr_element2 = ;      //need to fill in
+    assign addr_tag = addr[31:9];             //need to fill in
+    assign addr_index = addr[8:4];           //need to fill in
+    assign addr_element1 = {addr_index, 1'b0};      //the cacheline addresss
+    assign addr_element2 = {addr_index, 1'b1};      //need to fill in
     assign addr_word1 = {addr_element1, addr[ELEMENT_WORDS_WIDTH+WORD_BYTES_WIDTH-1:WORD_BYTES_WIDTH]};
-    assign addr_word2 = ;           //need to fill in
+    assign addr_word2 = {addr_element2, addr[ELEMENT_WORDS_WIDTH+WORD_BYTES_WIDTH-1:WORD_BYTES_WIDTH]};           //need to fill in
 
     assign word1 = inner_data[addr_word1];
-    assign word2 = ;                //need to fill in
+    assign word2 = inner_data[addr_word2];                //need to fill in
     assign half_word1 = addr[1] ? word1[31:16] : word1[15:0];
-    assign half_word2 = ;           //need to fill in
+    assign half_word2 = addr[1] ? word2[31:16] : word2[15:0];           //need to fill in
     assign byte1 = addr[1] ?
                     addr[0] ? word1[31:24] : word1[23:16] :
                     addr[0] ? word1[15:8] :  word1[7:0]   ;
-    assign byte2 = ;                //need to fill in
+    assign byte2 = addr[1] ?
+                    addr[0] ? word2[31:24] : word2[23:16] :
+                    addr[0] ? word2[15:8] :  word2[7:0]   ;                //need to fill in
 
     assign recent1 = inner_recent[addr_element1];
-    assign recent2 = ;              //need to fill in
+    assign recent2 = inner_recent[addr_element2];              //need to fill in
     assign valid1 = inner_valid[addr_element1];
-    assign valid2 = ;               //need to fill in
+    assign valid2 = inner_valid[addr_element2];               //need to fill in
     assign dirty1 = inner_dirty[addr_element1];
-    assign dirty2 = ;               //need to fill in
+    assign dirty2 = inner_dirty[addr_element2];               //need to fill in
     assign tag1 = inner_tag[addr_element1];
-    assign tag2 = ;                 //need to fill in
+    assign tag2 = inner_tag[addr_element2];                 //need to fill in
 
     assign hit1 = valid1 & (tag1 == addr_tag);
-    assign hit2 = ;                 //need to fill in
+    assign hit2 = valid2 & (tag2 == addr_tag);                 //need to fill in
 
     always @ (posedge clk) begin
         valid <= ;                  //need to fill in
@@ -104,7 +106,16 @@ module cache (
                 inner_recent[addr_element2] <= 1'b0;
             end
             else if (hit2) begin
-                    //need to fill in
+                //need to fill in
+                dout <=
+                    u_b_h_w[1] ? word2 :
+                    u_b_h_w[0] ? {u_b_h_w[2] ? 16'b0 : {16{half_word2[15]}}, half_word2} :
+                    {u_b_h_w[2] ? 24'b0 : {24{byte2[7]}}, byte2};
+                
+                // inner_recent will be refreshed only on r/w hit
+                // (including the r/w hit after miss and replacement)
+                inner_recent[addr_element2] <= 1'b1;
+                inner_recent[addr_element1] <= 1'b0;
             end
         end
         else dout <= inner_data[ recent1 ? addr_word2 : addr_word1 ];
@@ -137,7 +148,31 @@ module cache (
                 inner_recent[addr_element2] <= 1'b0;
             end
             else if (hit2) begin
-                    //need to fill in
+                //need to fill in
+                inner_data[addr_word2] <= 
+                    u_b_h_w[1] ?        // word?
+                        din
+                    :
+                        u_b_h_w[0] ?    // half word?
+                            addr[1] ?       // upper / lower?
+                                {din[15:0], word2[15:0]} 
+                            :
+                                {word2[31:16], din[15:0]} 
+                        :   // byte
+                            addr[1] ?
+                                addr[0] ?
+                                    {din[7:0], word2[23:0]}   // 11
+                                :
+                                    {word2[31:24], din[7:0], word2[15:0]} // 10
+                            :
+                                addr[0] ?
+                                    {word2[31:16], din[7:0], word2[7:0]}   // 01
+                                :
+                                    {word2[31:8], din[7:0]} // 00
+                ;
+                inner_dirty[addr_element2] <= 1'b1;
+                inner_recent[addr_element2] <= 1'b1;
+                inner_recent[addr_element1] <= 1'b0;
             end
         end
 
@@ -151,6 +186,10 @@ module cache (
                 // recent2 == 1 => replace 1
                 // recent2 == 0 => no data in this set, place to 1
                 //need to fill in
+                inner_data[addr_word1] <= din;
+                inner_valid[addr_element1] <= 1'b1;
+                inner_dirty[addr_element1] <= 1'b0;
+                inner_tag[addr_element1] <= addr_tag;
             end
         end
 
