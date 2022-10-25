@@ -85,10 +85,10 @@ module cache (
     assign hit2 = valid2 & (tag2 == addr_tag);                 //need to fill in
 
     always @ (posedge clk) begin
-        valid <= ;                  //need to fill in
-        dirty <= ;                  //need to fill in
-        tag <= ;                    //need to fill in
-        hit <= ;                    //need to fill in
+        valid <= (recent1 == 1'b1) ? valid2 : valid1;                  //need to fill in
+        dirty <= (recent1 == 1'b1) ? dirty2 : dirty1;                  //need to fill in
+        tag <= (recent1 == 1'b1) ? tag2 : tag1;  //need to fill in
+        hit <= hit1 | hit2;                    //need to fill in
         
         // read $ with load==0 means moving data from $ to mem
         // no need to update recent bit
