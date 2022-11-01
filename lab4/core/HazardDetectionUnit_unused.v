@@ -47,13 +47,20 @@ module HazardDetectionUnit_unused(
     assign reg_FD_flush = Branch_ID;
     assign reg_DE_flush = load_stall;
 
-    assign forward_ctrl_A = {2{rs1_forward_1}} & 2'd1 |
-                            {2{rs1_forward_2}} & 2'd2 |
-                            {2{rs1_forward_3}} & 2'd3 ;
+    // assign forward_ctrl_A = {2{rs1_forward_1}} & 2'd1 |
+    //                         {2{rs1_forward_2}} & 2'd2 |
+    //                         {2{rs1_forward_3}} & 2'd3 ;
+    assign forward_ctrl_A = (rs1_forward_1 == 1'b1) ? 2'd1 :
+                            ((rs1_forward_2 == 1'b1) ? 2'd2 :
+                            ((rs1_forward_3 == 1'b1) ? 2'd3 : 2'd0));
 
-    assign forward_ctrl_B = {2{rs2_forward_1}} & 2'd1 |
-                            {2{rs2_forward_2}} & 2'd2 |
-                            {2{rs2_forward_3}} & 2'd3 ;
+    // assign forward_ctrl_B = {2{rs2_forward_1}} & 2'd1 |
+    //                         {2{rs2_forward_2}} & 2'd2 |
+    //                         {2{rs2_forward_3}} & 2'd3 ;
+    assign forward_ctrl_B = (rs2_forward_1 == 1'b1) ? 2'd1 :
+                            ((rs2_forward_2 == 1'b1) ? 2'd2 :
+                            ((rs2_forward_3 == 1'b1) ? 2'd3 : 2'd0));
+
 
     assign forward_ctrl_ls = rs2_EXE == rd_MEM && hazard_optype_EXE == hazard_optype_STORE
                             && hazard_optype_MEM == hazard_optype_LOAD;
