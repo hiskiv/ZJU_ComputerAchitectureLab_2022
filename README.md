@@ -1,5 +1,8 @@
-# ZJU_ComputerAchitectureLab_2022
-My solutions to Zhejiang University Computer Achitecture labs in 2022.
+# ZJU_ComputerArchitectureLab_2022
+
+Wait, there is a typo in repository name... Please don't care...
+
+My solutions to Zhejiang University Computer Architecture labs in 2022.
 
 **Only for communication purposes and plagiarism is strictly prohibited.**
 
