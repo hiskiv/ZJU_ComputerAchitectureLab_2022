@@ -1,0 +1,1 @@
+HazardDetectUnit.v 建议使用个人lab1中自行实现的代码，不要用提供的框架里的代码
