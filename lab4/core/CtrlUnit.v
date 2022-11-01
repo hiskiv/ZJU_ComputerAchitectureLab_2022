@@ -9,7 +9,7 @@ module CtrlUnit(
     output [1:0] hazard_optype,
     output [2:0] ImmSel, cmp_ctrl,
     output [3:0] ALUControl,
-    output JALR
+    output JALR, JAL
 );
 
     wire[6:0] funct7 = inst[31:25];
@@ -75,7 +75,7 @@ module CtrlUnit(
     wire LUI   = opcode == 7'b0110111;
     wire AUIPC = opcode == 7'b0010111;
 
-    wire JAL  =  opcode == 7'b1101111;
+    assign JAL  =  opcode == 7'b1101111;
     assign JALR = (opcode == 7'b1100111) && funct3_0;
 
     wire R_valid = AND | OR | ADD | XOR | SLL | SRL | SRA | SUB | SLT | SLTU;

@@ -18,7 +18,7 @@ module  RV32core(
 
 	debug_clk clock(.clk(clk),.debug_en(debug_en),.debug_step(debug_step),.debug_clk(debug_clk));
 
-    wire Branch_ctrl, JALR, RegWrite_ctrl, mem_w_ctrl, MIO_ctrl,
+    wire Branch_ctrl, JALR, JAL, RegWrite_ctrl, mem_w_ctrl, MIO_ctrl,
         ALUSrc_A_ctrl, ALUSrc_B_ctrl, DatatoReg_ctrl, rs1use_ctrl, rs2use_ctrl;
     wire[1:0] hazard_optype_ctrl;
     wire[2:0] ImmSel_ctrl, cmp_ctrl;
@@ -82,7 +82,7 @@ module  RV32core(
         .ALUSrc_B(ALUSrc_B_ctrl),.DatatoReg(DatatoReg_ctrl),.RegWrite(RegWrite_ctrl),
         .mem_w(mem_w_ctrl),.MIO(MIO_ctrl),.rs1use(rs1use_ctrl),.rs2use(rs2use_ctrl),
         .hazard_optype(hazard_optype_ctrl),.ImmSel(ImmSel_ctrl),.cmp_ctrl(cmp_ctrl),
-        .ALUControl(ALUControl_ctrl),.JALR(JALR));
+        .ALUControl(ALUControl_ctrl),.JALR(JALR),.JAL(JAL));
     
     Regs register(.clk(debug_clk),.rst(rst),.L_S(RegWrite_WB),.R_addr_A(inst_ID[19:15]),
         .R_addr_B(inst_ID[24:20]),.rdata_A(rs1_data_reg),.rdata_B(rs2_data_reg),
@@ -103,12 +103,21 @@ module  RV32core(
 
     cmp_32 cmp_ID(.a(rs1_data_ID),.b(rs2_data_ID),.ctrl(cmp_ctrl),.c(cmp_res_ID));
     
-    HazardDetectionUnit hazard_unit(.clk(debug_clk),.Branch_ID(Branch_ctrl),.rs1use_ID(rs1use_ctrl),
+    // HazardDetectionUnit hazard_unit(.clk(debug_clk),.Branch_ID(Branch_ctrl),.rs1use_ID(rs1use_ctrl),
+    //     .rs2use_ID(rs2use_ctrl),.hazard_optype_ID(hazard_optype_ctrl),.rd_EXE(rd_EXE),
+    //     .rd_MEM(rd_MEM),.rs1_ID(inst_ID[19:15]),.rs2_ID(inst_ID[24:20]),.rs2_EXE(rs2_EXE),.cmu_stall(cmu_stall),
+    //     .PC_EN_IF(PC_EN_IF),.reg_FD_EN(reg_FD_EN),.reg_FD_stall(reg_FD_stall),
+    //     .reg_FD_flush(reg_FD_flush),.reg_DE_EN(reg_DE_EN),.reg_DE_flush(reg_DE_flush),
+    //     .reg_EM_EN(reg_EM_EN),.reg_EM_flush(reg_EM_flush),.reg_MW_EN(reg_MW_EN),
+    //     .forward_ctrl_ls(forward_ctrl_ls),.forward_ctrl_A(forward_ctrl_A),
+    //     .forward_ctrl_B(forward_ctrl_B));
+    HazardDetectionUnit hazard_unit(.clk(debug_clk),.Branch_ID(Branch_ctrl | JALR),.JAL(JAL),.rs1use_ID(rs1use_ctrl),
         .rs2use_ID(rs2use_ctrl),.hazard_optype_ID(hazard_optype_ctrl),.rd_EXE(rd_EXE),
-        .rd_MEM(rd_MEM),.rs1_ID(inst_ID[19:15]),.rs2_ID(inst_ID[24:20]),.rs2_EXE(rs2_EXE),.cmu_stall(cmu_stall),
-        .PC_EN_IF(PC_EN_IF),.reg_FD_EN(reg_FD_EN),.reg_FD_stall(reg_FD_stall),
-        .reg_FD_flush(reg_FD_flush),.reg_DE_EN(reg_DE_EN),.reg_DE_flush(reg_DE_flush),
-        .reg_EM_EN(reg_EM_EN),.reg_EM_flush(reg_EM_flush),.reg_MW_EN(reg_MW_EN),
+        .rd_MEM(rd_MEM),.rs1_ID(inst_ID[19:15]),.rs2_ID(inst_ID[24:20]),.rs2_EXE(rs2_EXE),
+        .DatatoReg_MEM(DatatoReg_MEM), .WR_EX(mem_w_EXE),.cmu_stall(cmu_stall),
+
+        .reg_FD_stall(reg_FD_stall),.reg_FD_flush(reg_FD_flush),.PC_EN_IF(PC_EN_IF),.reg_DE_flush(reg_DE_flush),
+        .reg_FD_EN(reg_FD_EN),.reg_DE_EN(reg_DE_EN),.reg_EM_EN(reg_EM_EN),.reg_EM_flush(reg_EM_flush),.reg_MW_EN(reg_MW_EN),
         .forward_ctrl_ls(forward_ctrl_ls),.forward_ctrl_A(forward_ctrl_A),
         .forward_ctrl_B(forward_ctrl_B));
 

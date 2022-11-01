@@ -88,46 +88,46 @@ module cmu (
                 S_IDLE: begin
                     if (en_r || en_w) begin
                         if (cache_hit)
-                            next_state = ??;
+                            next_state = S_IDLE; // hit
                         else if (cache_valid && cache_dirty)
-                            next_state = ??;
+                            next_state = S_PRE_BACK; // prepare write back
                         else
-                            next_state = ??;
+                            next_state = S_FILL; // miss but not dirty: replace
                     end
                     next_word_count = 2'b00;
                 end
 
                 S_PRE_BACK: begin
-                    next_state = ??;
+                    next_state = S_BACK; // write back
                     next_word_count = 2'b00;
                 end
 
                 S_BACK: begin
                     if (mem_ack_i && word_count == {ELEMENT_WORDS_WIDTH{1'b1}})    // 2'b11 in default case
-                        next_state = ??;
+                        next_state = S_FILL; // write back finished
                     else
-                        next_state = ??;
+                        next_state = S_BACK; // word count still unfinished, continue writing back
 
                     if (mem_ack_i)
-                        next_word_count = ??;
+                        next_word_count = word_count + 1; // switch to next word in the block
                     else
                         next_word_count = word_count;
                 end
 
                 S_FILL: begin
                     if (mem_ack_i && word_count == {ELEMENT_WORDS_WIDTH{1'b1}})
-                        next_state = ??;
+                        next_state = S_WAIT;
                     else
-                        next_state = ??;
+                        next_state = S_FILL; // fetching still unfinished, continue
 
                     if (mem_ack_i)
-                        next_word_count = ??;
+                        next_word_count = word_count + 1; // switch to next word in the block
                     else
                         next_word_count = word_count;
                 end
 
                 S_WAIT: begin
-                    next_state = ??;
+                    next_state = S_IDLE; // after read/write in cache, back to idle
                     next_word_count = 2'b00;
                 end
             endcase
@@ -189,6 +189,6 @@ module cmu (
     end
     assign mem_data_o = cache_dout;
 
-    assign stall = ??;
+    assign stall = (state == S_PRE_BACK) || (state == S_BACK) || (state == S_FILL); // CPU stall
 
 endmodule
