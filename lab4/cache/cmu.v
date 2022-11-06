@@ -109,7 +109,7 @@ module cmu (
                         next_state = S_BACK; // word count still unfinished, continue writing back
 
                     if (mem_ack_i)
-                        next_word_count = word_count + 1; // switch to next word in the block
+                        next_word_count = word_count + 2'b01; // switch to next word in the block
                     else
                         next_word_count = word_count;
                 end
@@ -121,7 +121,7 @@ module cmu (
                         next_state = S_FILL; // fetching still unfinished, continue
 
                     if (mem_ack_i)
-                        next_word_count = word_count + 1; // switch to next word in the block
+                        next_word_count = word_count + 2'b01; // switch to next word in the block
                     else
                         next_word_count = word_count;
                 end
@@ -189,6 +189,6 @@ module cmu (
     end
     assign mem_data_o = cache_dout;
 
-    assign stall = (state == S_PRE_BACK) || (state == S_BACK) || (state == S_FILL); // CPU stall
+    assign stall = (next_state != S_IDLE); // CPU stall
 
 endmodule
