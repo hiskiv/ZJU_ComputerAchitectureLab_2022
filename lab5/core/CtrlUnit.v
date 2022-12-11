@@ -207,7 +207,7 @@ module CtrlUnit(
                 B_in_FU <= 1'b0;
                 J_in_FU <= 1'b0;             //! to fill sth.in
             end
-            else if (FU_hazard  | reg_ID_flush | reg_ID_flush_next) begin   // ?
+            else if (FU_hazard  | reg_ID_flush | reg_ID_flush_next) begin   // flush for two cycles
                 B_in_FU <= 1'b0;
                 J_in_FU <= 1'b0;             //! to fill sth.in
             end

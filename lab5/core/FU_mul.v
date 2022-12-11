@@ -13,8 +13,14 @@ module FU_mul(
 
     reg[31:0] A_reg, B_reg;
 
-    ...         //! to fill sth.in
-    
+    always @(posedge clk) begin         //! to fill sth.in
+        if (EN && ~state) begin
+            A_reg <= A;
+            B_reg <= B;
+            state <= 6'h3f;
+        end
+        else state <= state >> 1;
+    end
 
 
     wire [63:0] mulres;
