@@ -94,8 +94,8 @@ module  RV32core(
         .imm(Imm_out_ID),.PC(PC_ID),.PC_jump(PC_jump_FU),.PC_wb(PC_wb_FU),.cmp_res(cmp_res_FU));
 
 
-    // WB
-    MUX8T1_32 mux_DtR(.I0(), .I1(), .I2(), .I3(), .I4(), .I5(), .I6(), .I7(), .s(), .o());         //! to fill sth.in
+    // WB: 1-ALU, 2-Mem, 3-Mul, 4-Div, 5-Jump
+    MUX8T1_32 mux_DtR(.I0(), .I1(ALUout_FU), .I2(mem_data_FU), .I3(mulres_FU), .I4(divres_FU), .I5(PC_wb_FU), .I6(), .I7(), .s(DatatoReg_ctrl), .o(wt_data_WB));         //! to fill sth.in
 
 
     always @* begin
