@@ -69,7 +69,7 @@ module  RV32core(
         .L_S(RegWrite_ctrl),.Wt_addr(rd_ctrl),.Wt_data(wt_data_WB),
         .Debug_addr(debug_addr[4:0]),.Debug_regs(debug_regs));
 
-    MUX2T1_32 mux_imm_ALU_ID_A(.I0(rs1_data_ID), .I1(Imm_out_ID), .s(ALUSrcA_ctrl), .o(ALUA_ID));            //! to fill sth.in
+    MUX2T1_32 mux_imm_ALU_ID_A(.I0(rs1_data_ID), .I1(PC_ID), .s(ALUSrcA_ctrl), .o(ALUA_ID));            //! to fill sth.in
 
     MUX2T1_32 mux_imm_ALU_ID_B(.I0(rs2_data_ID), .I1(Imm_out_ID), .s(ALUSrcB_ctrl), .o(ALUB_ID));            //! to fill sth.in
 

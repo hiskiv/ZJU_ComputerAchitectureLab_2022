@@ -30,9 +30,10 @@ module FU_jump(
 		else state <= 0;
 	end
 
+	wire[31:0] JALR_PC, Branch_PC;
 	assign PC_wb = PC_reg + 32'd4;
 	assign JALR_PC = rs1_data_reg + imm_reg;
-	assign Branch_PC = PC_reg + imm_reg
+	assign Branch_PC = PC_reg + imm_reg;
 	assign PC_jump = (JALR_reg == 1'b1) ? JALR_PC : Branch_PC;
 
 	cmp_32 cmp(.a(rs1_data_reg),.b(rs2_data_reg),.ctrl(cmp_ctrl_reg),.c(cmp_res));

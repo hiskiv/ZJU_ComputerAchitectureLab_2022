@@ -201,24 +201,25 @@ module CtrlUnit(
             if (reservation_reg[0] != 0) begin  // FU operation write back
                 FU_status[reservation_reg[0]] <= 0;             //! to fill sth.in
                 FU_writeback_en[reservation_reg[0]] <= 1'b0;
-                FU_write_to[reservation_reg[0]] <= 0;
+                // FU_write_to[reservation_reg[0]] <= 0;
             end
+            for (i = 0; i < 31; i = i + 1) reservation_reg[i] <= reservation_reg[i + 1];
             if (use_FU == 0) begin //  check whether FU is used
                 B_in_FU <= 1'b0;
                 J_in_FU <= 1'b0;             //! to fill sth.in
             end
             else if (FU_hazard  | reg_ID_flush | reg_ID_flush_next) begin   // flush for two cycles
-                B_in_FU <= 1'b0;
-                J_in_FU <= 1'b0;             //! to fill sth.in
+                B_in_FU <= B_valid;
+                J_in_FU <= JAL | JALR;             //! to fill sth.in
             end
             else begin  // regist FU operation
-                FU_status[reservation_reg[FU_delay_cycles[use_FU]]] <= 1'b1;             //! to fill sth.in
-                FU_write_to[reservation_reg[FU_delay_cycles[use_FU]]] <= rd;
-                FU_writeback_en[reservation_reg[FU_delay_cycles[use_FU]]] <= 1'b1;
+                reservation_reg[FU_delay_cycles[use_FU]-1] <= use_FU;             //! to fill sth.in
+                FU_status[use_FU] <= 1'b1;
+                FU_write_to[use_FU] <= rd;
+                FU_writeback_en[use_FU] <= (B_valid | S_valid) ? 1'b0 : 1'b1;
                 B_in_FU <= B_valid;
                 J_in_FU <= JAL | JALR;
             end
-            for (i = 0; i < 31; i = i + 1) reservation_reg[i] <= reservation_reg[i + 1];
         end
     end
 
