@@ -27,7 +27,7 @@ module FU_div(
         end
         else begin
             state <= state >> 1;
-            A_valid <= 1'b0;    // doubt
+            A_valid <= 1'b0;
             B_valid <= 1'b0;
         end
     end

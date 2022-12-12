@@ -151,7 +151,6 @@ module CtrlUnit(
                 (FU_write_to[3] == rd && FU_status[3] == 1'b1) |
                 (FU_write_to[4] == rd && FU_status[4] == 1'b1) |
                 (FU_write_to[5] == rd && FU_status[5] == 1'b1)) & rd_used;   //! to fill sth.in
-    // Q: if rs1 or rs2 not used in current inst?
     wire RAW_rs1 = (rs1 != 0) && (FU_write_to[1] == rs1 && FU_status[1] == 1'b1) |
                     (FU_write_to[2] == rs1 && FU_status[2] == 1'b1) |
                     (FU_write_to[3] == rs1 && FU_status[3] == 1'b1) |
@@ -201,7 +200,6 @@ module CtrlUnit(
             if (reservation_reg[0] != 0) begin  // FU operation write back
                 FU_status[reservation_reg[0]] <= 0;             //! to fill sth.in
                 FU_writeback_en[reservation_reg[0]] <= 1'b0;
-                // FU_write_to[reservation_reg[0]] <= 0;
             end
             for (i = 0; i < 31; i = i + 1) reservation_reg[i] <= reservation_reg[i + 1];
             if (use_FU == 0) begin //  check whether FU is used
