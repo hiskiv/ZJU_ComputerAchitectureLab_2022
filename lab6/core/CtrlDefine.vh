@@ -14,7 +14,7 @@
 `define Imm_type_U 3'b101
 
 // bits in FUS
-`define BUSY    0       // [1]
+`define BUSY    0       // [0]
 `define OP_L    1       // [5:1]
 `define OP_H    5
 `define DST_L   6       // [10:6]

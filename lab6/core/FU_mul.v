@@ -24,6 +24,7 @@ module FU_mul(
         else state <= state >> 1;
     end
 
+    wire [63:0] mulres;
     multiplier mul(.CLK(clk),.A(A_reg),.B(B_reg),.P(mulres));
 
     assign res = mulres[31:0];

@@ -199,7 +199,7 @@ module CtrlUnit(
     wire use_JUMP = B_valid | JAL | JALR;
 
     // normal stall: structural hazard or WAW
-    wire structural_hazard = FUS[use_FU][`BUSY];       // fill sth. here
+    wire structural_hazard = (use_FU != `FU_BLANK && FUS[use_FU][`BUSY]);       // fill sth. here
 
     wire[2:0] use_FU =  {3{use_ALU}}  & 3'd1 |
                         {3{use_MEM}}  & 3'd2 |
@@ -213,8 +213,8 @@ module CtrlUnit(
 
 
     //  Notice: these two are different
-    assign IS_en =                 // fill sth. here   
-    assign RO_en = ~normal_stall;                 // fill sth. here   
+    assign IS_en = IS_flush | (~normal_stall & ~ctrl_stall);                // fill sth. here   
+    assign RO_en = ~IS_flush & ~normal_stall & ~ctrl_stall;                 // fill sth. here   
 
     always @ (posedge clk or posedge rst) begin
         if (rst) begin
@@ -312,17 +312,50 @@ module CtrlUnit(
     // WAR = 0  WAR not exist
     
     // these asignments are wrong (don't know those signals they mean)
-    wire ALU_WAR = (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC1_H:`SRC1_L] && FUS[`FU_JUMP][`RDY1] == 1'b0 && FUS[`FU_JUMP][`FU1_H:`FU1_L] != `FU_ALU)
-                    || (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC2_H:`SRC2_L] && FUS[`FU_JUMP][`RDY2] == 1'b0 && FUS[`FU_JUMP][`FU2_H:`FU2_L] != `FU_ALU)
-                    || ;     // fill sth. here
-    wire MEM_WAR = (FUS[`FU_MEM][`SRC1_H:`SRC1_L] == dst && FUS[`FU_MEM][`RDY1] == 0)
-                    || (FUS[`FU_MEM][`SRC2_H:`SRC2_L] == rd && FUS[`FU_MEM][`RDY2] == 0);     // fill sth. here
-    wire MUL_WAR = (FUS[`FU_MUL][`SRC1_H:`SRC1_L] == dst && FUS[`FU_MUL][`RDY1] == 0)
-                    || (FUS[`FU_MUL][`SRC2_H:`SRC2_L] == rd && FUS[`FU_MUL][`RDY2] == 0);     // fill sth. here
-    wire DIV_WAR = (FUS[`FU_DIV][`SRC1_H:`SRC1_L] == dst && FUS[`FU_DIV][`RDY1] == 0)
-                    || (FUS[`FU_DIV][`SRC2_H:`SRC2_L] == rd && FUS[`FU_DIV][`RDY2] == 0);     // fill sth. here
-    wire JUMP_WAR = (FUS[`FU_JUMP][`SRC1_H:`SRC1_L] == dst && FUS[`FU_JUMP][`RDY1] == 0)
-                    || (FUS[`FU_JUMP][`SRC2_H:`SRC2_L] == rd && FUS[`FU_JUMP][`RDY2] == 0);     // fill sth. here
+    wire ALU_WAR = (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC1_H:`SRC1_L] && FUS[`FU_JUMP][`RDY1] == 1'b1) ||
+                   (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC2_H:`SRC2_L] && FUS[`FU_JUMP][`RDY2] == 1'b1) ||
+                   (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_MEM][`SRC1_H:`SRC1_L] && FUS[`FU_MEM][`RDY1] == 1'b1) ||
+                   (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_MEM][`SRC2_H:`SRC2_L] && FUS[`FU_MEM][`RDY2] == 1'b1) ||
+                   (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_MUL][`SRC1_H:`SRC1_L] && FUS[`FU_MUL][`RDY1] == 1'b1) ||
+                   (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_MUL][`SRC2_H:`SRC2_L] && FUS[`FU_MUL][`RDY2] == 1'b1) ||
+                   (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_DIV][`SRC1_H:`SRC1_L] && FUS[`FU_DIV][`RDY1] == 1'b1) ||
+                   (FUS[`FU_ALU][`DST_H:`DST_L] == FUS[`FU_DIV][`SRC2_H:`SRC2_L] && FUS[`FU_DIV][`RDY2] == 1'b1);     // fill sth. here
+
+    wire MEM_WAR = (FUS[`FU_MEM][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC1_H:`SRC1_L] && FUS[`FU_JUMP][`RDY1] == 1'b1) ||
+                   (FUS[`FU_MEM][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC2_H:`SRC2_L] && FUS[`FU_JUMP][`RDY2] == 1'b1) ||
+                   (FUS[`FU_MEM][`DST_H:`DST_L] == FUS[`FU_ALU][`SRC1_H:`SRC1_L] && FUS[`FU_ALU][`RDY1] == 1'b1) ||
+                   (FUS[`FU_MEM][`DST_H:`DST_L] == FUS[`FU_ALU][`SRC2_H:`SRC2_L] && FUS[`FU_ALU][`RDY2] == 1'b1) ||
+                   (FUS[`FU_MEM][`DST_H:`DST_L] == FUS[`FU_MUL][`SRC1_H:`SRC1_L] && FUS[`FU_MUL][`RDY1] == 1'b1) ||
+                   (FUS[`FU_MEM][`DST_H:`DST_L] == FUS[`FU_MUL][`SRC2_H:`SRC2_L] && FUS[`FU_MUL][`RDY2] == 1'b1) ||
+                   (FUS[`FU_MEM][`DST_H:`DST_L] == FUS[`FU_DIV][`SRC1_H:`SRC1_L] && FUS[`FU_DIV][`RDY1] == 1'b1) ||
+                   (FUS[`FU_MEM][`DST_H:`DST_L] == FUS[`FU_DIV][`SRC2_H:`SRC2_L] && FUS[`FU_DIV][`RDY2] == 1'b1);     // fill sth. here
+
+    wire MUL_WAR = (FUS[`FU_MUL][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC1_H:`SRC1_L] && FUS[`FU_JUMP][`RDY1] == 1'b1) ||
+                   (FUS[`FU_MUL][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC2_H:`SRC2_L] && FUS[`FU_JUMP][`RDY2] == 1'b1) ||
+                   (FUS[`FU_MUL][`DST_H:`DST_L] == FUS[`FU_ALU][`SRC1_H:`SRC1_L] && FUS[`FU_ALU][`RDY1] == 1'b1) ||
+                   (FUS[`FU_MUL][`DST_H:`DST_L] == FUS[`FU_ALU][`SRC2_H:`SRC2_L] && FUS[`FU_ALU][`RDY2] == 1'b1) ||
+                   (FUS[`FU_MUL][`DST_H:`DST_L] == FUS[`FU_MEM][`SRC1_H:`SRC1_L] && FUS[`FU_MEM][`RDY1] == 1'b1) ||
+                   (FUS[`FU_MUL][`DST_H:`DST_L] == FUS[`FU_MEM][`SRC2_H:`SRC2_L] && FUS[`FU_MEM][`RDY2] == 1'b1) ||
+                   (FUS[`FU_MUL][`DST_H:`DST_L] == FUS[`FU_DIV][`SRC1_H:`SRC1_L] && FUS[`FU_DIV][`RDY1] == 1'b1) ||
+                   (FUS[`FU_MUL][`DST_H:`DST_L] == FUS[`FU_DIV][`SRC2_H:`SRC2_L] && FUS[`FU_DIV][`RDY2] == 1'b1);     // fill sth. here
+
+    wire DIV_WAR = (FUS[`FU_DIV][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC1_H:`SRC1_L] && FUS[`FU_JUMP][`RDY1] == 1'b1) ||
+                   (FUS[`FU_DIV][`DST_H:`DST_L] == FUS[`FU_JUMP][`SRC2_H:`SRC2_L] && FUS[`FU_JUMP][`RDY2] == 1'b1) ||
+                   (FUS[`FU_DIV][`DST_H:`DST_L] == FUS[`FU_ALU][`SRC1_H:`SRC1_L] && FUS[`FU_ALU][`RDY1] == 1'b1) ||
+                   (FUS[`FU_DIV][`DST_H:`DST_L] == FUS[`FU_ALU][`SRC2_H:`SRC2_L] && FUS[`FU_ALU][`RDY2] == 1'b1) ||
+                   (FUS[`FU_DIV][`DST_H:`DST_L] == FUS[`FU_MEM][`SRC1_H:`SRC1_L] && FUS[`FU_MEM][`RDY1] == 1'b1) ||
+                   (FUS[`FU_DIV][`DST_H:`DST_L] == FUS[`FU_MEM][`SRC2_H:`SRC2_L] && FUS[`FU_MEM][`RDY2] == 1'b1) ||
+                   (FUS[`FU_DIV][`DST_H:`DST_L] == FUS[`FU_MUL][`SRC1_H:`SRC1_L] && FUS[`FU_MUL][`RDY1] == 1'b1) ||
+                   (FUS[`FU_DIV][`DST_H:`DST_L] == FUS[`FU_MUL][`SRC2_H:`SRC2_L] && FUS[`FU_MUL][`RDY2] == 1'b1); 
+
+    wire JUMP_WAR = (FUS[`FU_JUMP][`DST_H:`DST_L] == FUS[`FU_MUL][`SRC1_H:`SRC1_L] && FUS[`FU_MUL][`RDY1] == 1'b1) ||
+                   (FUS[`FU_JUMP][`DST_H:`DST_L] == FUS[`FU_MUL][`SRC2_H:`SRC2_L] && FUS[`FU_MUL][`RDY2] == 1'b1) ||
+                   (FUS[`FU_JUMP][`DST_H:`DST_L] == FUS[`FU_ALU][`SRC1_H:`SRC1_L] && FUS[`FU_ALU][`RDY1] == 1'b1) ||
+                   (FUS[`FU_JUMP][`DST_H:`DST_L] == FUS[`FU_ALU][`SRC2_H:`SRC2_L] && FUS[`FU_ALU][`RDY2] == 1'b1) ||
+                   (FUS[`FU_JUMP][`DST_H:`DST_L] == FUS[`FU_MEM][`SRC1_H:`SRC1_L] && FUS[`FU_MEM][`RDY1] == 1'b1) ||
+                   (FUS[`FU_JUMP][`DST_H:`DST_L] == FUS[`FU_MEM][`SRC2_H:`SRC2_L] && FUS[`FU_MEM][`RDY2] == 1'b1) ||
+                   (FUS[`FU_JUMP][`DST_H:`DST_L] == FUS[`FU_DIV][`SRC1_H:`SRC1_L] && FUS[`FU_DIV][`RDY1] == 1'b1) ||
+                   (FUS[`FU_JUMP][`DST_H:`DST_L] == FUS[`FU_DIV][`SRC2_H:`SRC2_L] && FUS[`FU_DIV][`RDY2] == 1'b1); 
 
 
 
@@ -358,6 +391,7 @@ module CtrlUnit(
                 FUS[use_FU][`FU2_H:`FU2_L]      <= fu2;
                 FUS[use_FU][`RDY1]              <= rdy1;
                 FUS[use_FU][`RDY2]              <= rdy2;
+                FUS[use_FU][`FU_DONE]           <= 1'b0;
                 //
                 
                 IMM[use_FU] <= imm;
@@ -368,42 +402,47 @@ module CtrlUnit(
             // RO
             if (FUS[`FU_JUMP][`RDY1] & FUS[`FU_JUMP][`RDY2]) begin
                 // JUMP
-                // fill sth. here.
+                FUS[`FU_JUMP][`RDY1] <= 1'b0;
+                FUS[`FU_JUMP][`RDY2] <= 1'b0;
             end
 
             if (FUS[`FU_ALU][`RDY1] & FUS[`FU_ALU][`RDY2]) begin     // fill sth. here.
                 // ALU
-                // fill sth. here.
+                FUS[`FU_ALU][`RDY1] <= 1'b0;
+                FUS[`FU_ALU][`RDY2] <= 1'b0;
             end
 
             if (FUS[`FU_MEM][`RDY1] & FUS[`FU_MEM][`RDY2]) begin     // fill sth. here.
                 // MEM
-                // fill sth. here.
+                FUS[`FU_MEM][`RDY1] <= 1'b0;
+                FUS[`FU_MEM][`RDY2] <= 1'b0;
             end
 
             if (FUS[`FU_MUL][`RDY1] & FUS[`FU_MUL][`RDY2]) begin     // fill sth. here.
                 // MUL
-                // fill sth. here.
+                FUS[`FU_MUL][`RDY1] <= 1'b0;
+                FUS[`FU_MUL][`RDY2] <= 1'b0;
             end
 
             if (FUS[`FU_DIV][`RDY1] & FUS[`FU_DIV][`RDY2]) begin     // fill sth. here.
                 // DIV
-                // fill sth. here.
+                FUS[`FU_DIV][`RDY1] <= 1'b0;
+                FUS[`FU_DIV][`RDY2] <= 1'b0;
             end
 
             //  EX   
             //  Manage FUS[FU_DONE] here
 
                 //  JUMP
-                FUS[`FU_JUMP][`FU_DONE] <= JUMP_done;  //fill sth. here
+                FUS[`FU_JUMP][`FU_DONE] <= FUS[`FU_JUMP][`FU_DONE] | JUMP_done;  //fill sth. here
                 //  ALU
-                FUS[`FU_ALU][`FU_DONE]  <= ALU_done; //fill sth. here
+                FUS[`FU_ALU][`FU_DONE]  <= FUS[`FU_ALU][`FU_DONE] | ALU_done; //fill sth. here
                 //  MEM
-                FUS[`FU_MEM][`FU_DONE]  <= MEM_done; //fill sth. here
+                FUS[`FU_MEM][`FU_DONE]  <= FUS[`FU_MEM][`FU_DONE] | MEM_done; //fill sth. here
                 //  MUL
-                FUS[`FU_MUL][`FU_DONE]  <= MUL_done; //fill sth. here
+                FUS[`FU_MUL][`FU_DONE]  <= FUS[`FU_MUL][`FU_DONE] | MUL_done; //fill sth. here
                 //  DIV
-                FUS[`FU_DIV][`FU_DONE]  <= DIV_done; //fill sth. here
+                FUS[`FU_DIV][`FU_DONE]  <= FUS[`FU_DIV][`FU_DONE] | DIV_done; //fill sth. here
 
 
 
@@ -415,15 +454,15 @@ module CtrlUnit(
                 Inst[`FU_JUMP] <= 32'b0;  //fill sth. here
 
                 // ensure RAW
-                FUS[`FU_ALU][`RDY1] <= (FUS[`FU_ALU][`FU1_H:`FU1_L] == `FU_JUMP);     // fill sth. here
-                FUS[`FU_MUL][`RDY1] <= (FUS[`FU_MUL][`FU1_H:`FU1_L] == `FU_JUMP);     // fill sth. here
-                FUS[`FU_MEM][`RDY1] <= (FUS[`FU_MEM][`FU1_H:`FU1_L] == `FU_JUMP);     // fill sth. here
-                FUS[`FU_DIV][`RDY1] <= (FUS[`FU_DIV][`FU1_H:`FU1_L] == `FU_JUMP);     // fill sth. here
+                FUS[`FU_ALU][`RDY1] <= (FUS[`FU_ALU][`FU1_H:`FU1_L] == `FU_JUMP) | FUS[`FU_ALU][`RDY1];     // fill sth. here
+                FUS[`FU_MUL][`RDY1] <= (FUS[`FU_MUL][`FU1_H:`FU1_L] == `FU_JUMP) | FUS[`FU_MUL][`RDY1];     // fill sth. here
+                FUS[`FU_MEM][`RDY1] <= (FUS[`FU_MEM][`FU1_H:`FU1_L] == `FU_JUMP) | FUS[`FU_MEM][`RDY1];     // fill sth. here
+                FUS[`FU_DIV][`RDY1] <= (FUS[`FU_DIV][`FU1_H:`FU1_L] == `FU_JUMP) | FUS[`FU_DIV][`RDY1];     // fill sth. here
                 
-                FUS[`FU_ALU][`RDY2] <= (FUS[`FU_ALU][`FU2_H:`FU2_L] == `FU_JUMP);     // fill sth. here
-                FUS[`FU_MUL][`RDY2] <= (FUS[`FU_MUL][`FU2_H:`FU2_L] == `FU_JUMP);     // fill sth. here
-                FUS[`FU_MEM][`RDY2] <= (FUS[`FU_MEM][`FU2_H:`FU2_L] == `FU_JUMP);     // fill sth. here
-                FUS[`FU_DIV][`RDY2] <= (FUS[`FU_DIV][`FU2_H:`FU2_L] == `FU_JUMP);     // fill sth. here
+                FUS[`FU_ALU][`RDY2] <= (FUS[`FU_ALU][`FU2_H:`FU2_L] == `FU_JUMP) | FUS[`FU_ALU][`RDY2];     // fill sth. here
+                FUS[`FU_MUL][`RDY2] <= (FUS[`FU_MUL][`FU2_H:`FU2_L] == `FU_JUMP) | FUS[`FU_MUL][`RDY2];     // fill sth. here
+                FUS[`FU_MEM][`RDY2] <= (FUS[`FU_MEM][`FU2_H:`FU2_L] == `FU_JUMP) | FUS[`FU_MEM][`RDY2];     // fill sth. here
+                FUS[`FU_DIV][`RDY2] <= (FUS[`FU_DIV][`FU2_H:`FU2_L] == `FU_JUMP) | FUS[`FU_DIV][`RDY2];     // fill sth. here
 
                 FUS[`FU_JUMP] <= 32'b0;  //fill sth. here
             end
@@ -434,15 +473,15 @@ module CtrlUnit(
                 Inst[`FU_ALU] <= 32'b0;  //fill sth. here
 
                 // ensure RAW
-                FUS[`FU_JUMP][`RDY1] <= (FUS[`FU_JUMP][`FU1_H:`FU1_L] == `FU_ALU);     // fill sth. here
-                FUS[`FU_MUL][`RDY1] <= (FUS[`FU_MUL][`FU1_H:`FU1_L] == `FU_ALU);     // fill sth. here
-                FUS[`FU_MEM][`RDY1] <= (FUS[`FU_MEM][`FU1_H:`FU1_L] == `FU_ALU);     // fill sth. here
-                FUS[`FU_DIV][`RDY1] <= (FUS[`FU_DIV][`FU1_H:`FU1_L] == `FU_ALU);     // fill sth. here
+                FUS[`FU_JUMP][`RDY1] <= (FUS[`FU_JUMP][`FU1_H:`FU1_L] == `FU_ALU) | FUS[`FU_JUMP][`RDY1];     // fill sth. here
+                FUS[`FU_MUL][`RDY1] <= (FUS[`FU_MUL][`FU1_H:`FU1_L] == `FU_ALU) | FUS[`FU_MUL][`RDY1];     // fill sth. here
+                FUS[`FU_MEM][`RDY1] <= (FUS[`FU_MEM][`FU1_H:`FU1_L] == `FU_ALU) | FUS[`FU_MEM][`RDY1];     // fill sth. here
+                FUS[`FU_DIV][`RDY1] <= (FUS[`FU_DIV][`FU1_H:`FU1_L] == `FU_ALU) | FUS[`FU_DIV][`RDY1];     // fill sth. here
                 
-                FUS[`FU_JUMP][`RDY2] <= (FUS[`FU_JUMP][`FU2_H:`FU2_L] == `FU_ALU);     // fill sth. here
-                FUS[`FU_MUL][`RDY2] <= (FUS[`FU_MUL][`FU2_H:`FU2_L] == `FU_ALU);     // fill sth. here
-                FUS[`FU_MEM][`RDY2] <= (FUS[`FU_MEM][`FU2_H:`FU2_L] == `FU_ALU);     // fill sth. here
-                FUS[`FU_DIV][`RDY2] <= (FUS[`FU_DIV][`FU2_H:`FU2_L] == `FU_ALU);     // fill sth. here
+                FUS[`FU_JUMP][`RDY2] <= (FUS[`FU_JUMP][`FU2_H:`FU2_L] == `FU_ALU) | FUS[`FU_JUMP][`RDY2];     // fill sth. here
+                FUS[`FU_MUL][`RDY2] <= (FUS[`FU_MUL][`FU2_H:`FU2_L] == `FU_ALU) | FUS[`FU_MUL][`RDY2];     // fill sth. here
+                FUS[`FU_MEM][`RDY2] <= (FUS[`FU_MEM][`FU2_H:`FU2_L] == `FU_ALU) | FUS[`FU_MEM][`RDY2];     // fill sth. here
+                FUS[`FU_DIV][`RDY2] <= (FUS[`FU_DIV][`FU2_H:`FU2_L] == `FU_ALU) | FUS[`FU_DIV][`RDY2];     // fill sth. here
                 
                 FUS[`FU_ALU] <= 32'b0;  //fill sth. here
             end
@@ -453,15 +492,15 @@ module CtrlUnit(
                 Inst[`FU_MEM] <= 32'b0;  //fill sth. here
 
                 // ensure RAW
-                FUS[`FU_JUMP][`RDY1] <= (FUS[`FU_JUMP][`FU1_H:`FU1_L] == `FU_MEM);     // fill sth. here
-                FUS[`FU_MUL][`RDY1] <= (FUS[`FU_MUL][`FU1_H:`FU1_L] == `FU_MEM);     // fill sth. here
-                FUS[`FU_ALU][`RDY1] <= (FUS[`FU_ALU][`FU1_H:`FU1_L] == `FU_MEM);     // fill sth. here
-                FUS[`FU_DIV][`RDY1] <= (FUS[`FU_DIV][`FU1_H:`FU1_L] == `FU_MEM);     // fill sth. here
+                FUS[`FU_JUMP][`RDY1] <= (FUS[`FU_JUMP][`FU1_H:`FU1_L] == `FU_MEM) | FUS[`FU_JUMP][`RDY1];     // fill sth. here
+                FUS[`FU_MUL][`RDY1] <= (FUS[`FU_MUL][`FU1_H:`FU1_L] == `FU_MEM) | FUS[`FU_MUL][`RDY1];     // fill sth. here
+                FUS[`FU_ALU][`RDY1] <= (FUS[`FU_ALU][`FU1_H:`FU1_L] == `FU_MEM) | FUS[`FU_ALU][`RDY1];     // fill sth. here
+                FUS[`FU_DIV][`RDY1] <= (FUS[`FU_DIV][`FU1_H:`FU1_L] == `FU_MEM) | FUS[`FU_DIV][`RDY1];     // fill sth. here
                 
-                FUS[`FU_JUMP][`RDY2] <= (FUS[`FU_JUMP][`FU2_H:`FU2_L] == `FU_MEM);     // fill sth. here
-                FUS[`FU_MUL][`RDY2] <= (FUS[`FU_MUL][`FU2_H:`FU2_L] == `FU_MEM);     // fill sth. here
-                FUS[`FU_ALU][`RDY2] <= (FUS[`FU_ALU][`FU2_H:`FU2_L] == `FU_MEM);     // fill sth. here
-                FUS[`FU_DIV][`RDY2] <= (FUS[`FU_DIV][`FU2_H:`FU2_L] == `FU_MEM);     // fill sth. here
+                FUS[`FU_JUMP][`RDY2] <= (FUS[`FU_JUMP][`FU2_H:`FU2_L] == `FU_MEM) | FUS[`FU_JUMP][`RDY2];     // fill sth. here
+                FUS[`FU_MUL][`RDY2] <= (FUS[`FU_MUL][`FU2_H:`FU2_L] == `FU_MEM) | FUS[`FU_MUL][`RDY2];     // fill sth. here
+                FUS[`FU_ALU][`RDY2] <= (FUS[`FU_ALU][`FU2_H:`FU2_L] == `FU_MEM) | FUS[`FU_ALU][`RDY2];     // fill sth. here
+                FUS[`FU_DIV][`RDY2] <= (FUS[`FU_DIV][`FU2_H:`FU2_L] == `FU_MEM) | FUS[`FU_DIV][`RDY2];     // fill sth. here
 
                 FUS[`FU_MEM] <= 32'b0;  //fill sth. here
             end
@@ -472,15 +511,15 @@ module CtrlUnit(
                 Inst[`FU_MUL] <= 32'b0;  //fill sth. here
 
                 // ensure RAW
-                FUS[`FU_JUMP][`RDY1] <= (FUS[`FU_JUMP][`FU1_H:`FU1_L] == `FU_MUL);     // fill sth. here
-                FUS[`FU_MEM][`RDY1] <= (FUS[`FU_MEM][`FU1_H:`FU1_L] == `FU_MUL);     // fill sth. here
-                FUS[`FU_ALU][`RDY1] <= (FUS[`FU_ALU][`FU1_H:`FU1_L] == `FU_MUL);     // fill sth. here
-                FUS[`FU_DIV][`RDY1] <= (FUS[`FU_DIV][`FU1_H:`FU1_L] == `FU_MUL);     // fill sth. here
+                FUS[`FU_JUMP][`RDY1] <= (FUS[`FU_JUMP][`FU1_H:`FU1_L] == `FU_MUL) | FUS[`FU_JUMP][`RDY1];     // fill sth. here
+                FUS[`FU_MEM][`RDY1] <= (FUS[`FU_MEM][`FU1_H:`FU1_L] == `FU_MUL) | FUS[`FU_MEM][`RDY1];     // fill sth. here
+                FUS[`FU_ALU][`RDY1] <= (FUS[`FU_ALU][`FU1_H:`FU1_L] == `FU_MUL) | FUS[`FU_ALU][`RDY1];     // fill sth. here
+                FUS[`FU_DIV][`RDY1] <= (FUS[`FU_DIV][`FU1_H:`FU1_L] == `FU_MUL) | FUS[`FU_DIV][`RDY1];     // fill sth. here
                 
-                FUS[`FU_JUMP][`RDY2] <= (FUS[`FU_JUMP][`FU2_H:`FU2_L] == `FU_MUL);     // fill sth. here
-                FUS[`FU_MEM][`RDY2] <= (FUS[`FU_MEM][`FU2_H:`FU2_L] == `FU_MUL);     // fill sth. here
-                FUS[`FU_ALU][`RDY2] <= (FUS[`FU_ALU][`FU2_H:`FU2_L] == `FU_MUL);     // fill sth. here
-                FUS[`FU_DIV][`RDY2] <= (FUS[`FU_DIV][`FU2_H:`FU2_L] == `FU_MUL);     // fill sth. here
+                FUS[`FU_JUMP][`RDY2] <= (FUS[`FU_JUMP][`FU2_H:`FU2_L] == `FU_MUL) | FUS[`FU_JUMP][`RDY2];     // fill sth. here
+                FUS[`FU_MEM][`RDY2] <= (FUS[`FU_MEM][`FU2_H:`FU2_L] == `FU_MUL) | FUS[`FU_MEM][`RDY2];     // fill sth. here
+                FUS[`FU_ALU][`RDY2] <= (FUS[`FU_ALU][`FU2_H:`FU2_L] == `FU_MUL) | FUS[`FU_ALU][`RDY2];     // fill sth. here
+                FUS[`FU_DIV][`RDY2] <= (FUS[`FU_DIV][`FU2_H:`FU2_L] == `FU_MUL) | FUS[`FU_DIV][`RDY2];     // fill sth. here
 
                 FUS[`FU_MUL] <= 32'b0;  //fill sth. here
             end
@@ -491,15 +530,15 @@ module CtrlUnit(
                 Inst[`FU_DIV] <= 32'b0;  //fill sth. here
 
                 // ensure RAW
-                FUS[`FU_JUMP][`RDY1] <= (FUS[`FU_JUMP][`FU1_H:`FU1_L] == `FU_DIV);     // fill sth. here
-                FUS[`FU_MEM][`RDY1] <= (FUS[`FU_MEM][`FU1_H:`FU1_L] == `FU_DIV);     // fill sth. here
-                FUS[`FU_ALU][`RDY1] <= (FUS[`FU_ALU][`FU1_H:`FU1_L] == `FU_DIV);     // fill sth. here
-                FUS[`FU_MUL][`RDY1] <= (FUS[`FU_MUL][`FU1_H:`FU1_L] == `FU_DIV);     // fill sth. here
+                FUS[`FU_JUMP][`RDY1] <= (FUS[`FU_JUMP][`FU1_H:`FU1_L] == `FU_DIV) | FUS[`FU_JUMP][`RDY1];     // fill sth. here
+                FUS[`FU_MEM][`RDY1] <= (FUS[`FU_MEM][`FU1_H:`FU1_L] == `FU_DIV) | FUS[`FU_MEM][`RDY1];     // fill sth. here
+                FUS[`FU_ALU][`RDY1] <= (FUS[`FU_ALU][`FU1_H:`FU1_L] == `FU_DIV) | FUS[`FU_ALU][`RDY1];     // fill sth. here
+                FUS[`FU_MUL][`RDY1] <= (FUS[`FU_MUL][`FU1_H:`FU1_L] == `FU_DIV) | FUS[`FU_MUL][`RDY1];     // fill sth. here
                 
-                FUS[`FU_JUMP][`RDY2] <= (FUS[`FU_JUMP][`FU2_H:`FU2_L] == `FU_DIV);     // fill sth. here
-                FUS[`FU_MEM][`RDY2] <= (FUS[`FU_MEM][`FU2_H:`FU2_L] == `FU_DIV);     // fill sth. here
-                FUS[`FU_ALU][`RDY2] <= (FUS[`FU_ALU][`FU2_H:`FU2_L] == `FU_DIV);     // fill sth. here
-                FUS[`FU_MUL][`RDY2] <= (FUS[`FU_MUL][`FU2_H:`FU2_L] == `FU_DIV);     // fill sth. here
+                FUS[`FU_JUMP][`RDY2] <= (FUS[`FU_JUMP][`FU2_H:`FU2_L] == `FU_DIV) | FUS[`FU_JUMP][`RDY2];     // fill sth. here
+                FUS[`FU_MEM][`RDY2] <= (FUS[`FU_MEM][`FU2_H:`FU2_L] == `FU_DIV) | FUS[`FU_MEM][`RDY2];     // fill sth. here
+                FUS[`FU_ALU][`RDY2] <= (FUS[`FU_ALU][`FU2_H:`FU2_L] == `FU_DIV) | FUS[`FU_ALU][`RDY2];     // fill sth. here
+                FUS[`FU_MUL][`RDY2] <= (FUS[`FU_MUL][`FU2_H:`FU2_L] == `FU_DIV) | FUS[`FU_MUL][`RDY2];     // fill sth. here
 
                 FUS[`FU_DIV] <= 32'b0;  //fill sth. here
             end
@@ -603,7 +642,7 @@ module CtrlUnit(
     end
 
     // WB
-    always @ (*) begin
+    always @ (posedge clk) begin
         reg_write_ALU   =   0;  //  ALU
         rd_ctrl_ALU     =   0;
 
@@ -620,27 +659,27 @@ module CtrlUnit(
         rd_ctrl_DIV     =   0;
 
         //  WB condition check
-        if (ALU_done) begin
+        if (FUS[`FU_ALU][`FU_DONE] && ~ALU_WAR) begin
             reg_write_ALU = 1'b1;           //fill sth. here
             rd_ctrl_ALU = FUS[`FU_ALU][`DST_H:`DST_L];
         end
 
-        if (JUMP_done) begin
+        if (FUS[`FU_JUMP][`FU_DONE] && ~JUMP_WAR) begin
             reg_write_JUMP = 1'b1;           //fill sth. here
             rd_ctrl_JUMP = FUS[`FU_JUMP][`DST_H:`DST_L];
         end
 
-        if (MEM_done) begin
+        if (FUS[`FU_MEM][`FU_DONE] && ~MEM_WAR) begin
             reg_write_MEM = 1'b1;           //fill sth. here
             rd_ctrl_MEM = FUS[`FU_MEM][`DST_H:`DST_L];
         end
 
-        if (MUL_done) begin
+        if (FUS[`FU_MUL][`FU_DONE] && ~MUL_WAR) begin
             reg_write_MUL = 1'b1;           //fill sth. here
             rd_ctrl_MUL = FUS[`FU_MUL][`DST_H:`DST_L];
         end
 
-        if (DIV_done) begin
+        if (FUS[`FU_DIV][`FU_DONE] && ~DIV_WAR) begin
             reg_write_DIV = 1'b1;           //fill sth. here
             rd_ctrl_DIV = FUS[`FU_DIV][`DST_H:`DST_L];
         end
@@ -697,41 +736,41 @@ module CtrlUnit(
             2:  Test_signal = PC;  
             3:  Test_signal = inst;
 
-            4:  Test_signal = ...;
-            5:  Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
-            6:  Test_signal = ...;      // 8+8+3+1+8+1+3=32    
-            7:  Test_signal = ...;      // 8+8+3+1+8+1+3=32  
+            // 4:  Test_signal = ...;
+            // 5:  Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
+            // 6:  Test_signal = ...;      // 8+8+3+1+8+1+3=32    
+            // 7:  Test_signal = ...;      // 8+8+3+1+8+1+3=32  
 
-            8:  Test_signal = ...;
-            9:  Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
-            10: Test_signal = ...;      // 8+8+3+1+8+1+3=32    
-            11: Test_signal = ...;      // 8+8+3+1+8+1+3=32  
+            // 8:  Test_signal = ...;
+            // 9:  Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
+            // 10: Test_signal = ...;      // 8+8+3+1+8+1+3=32    
+            // 11: Test_signal = ...;      // 8+8+3+1+8+1+3=32  
 
-            12: Test_signal = ...;
-            13: Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
-            14: Test_signal = ...;      // 8+8+3+1+8+1+3=32    
-            15: Test_signal = ...;      // 8+8+3+1+8+1+3=32  
+            // 12: Test_signal = ...;
+            // 13: Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
+            // 14: Test_signal = ...;      // 8+8+3+1+8+1+3=32    
+            // 15: Test_signal = ...;      // 8+8+3+1+8+1+3=32  
 
-            16: Test_signal = ...;
-            17: Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
-            18: Test_signal = ...;      // 8+8+3+1+8+1+3=32    
-            19: Test_signal = ...;      // 8+8+3+1+8+1+3=32 
+            // 16: Test_signal = ...;
+            // 17: Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
+            // 18: Test_signal = ...;      // 8+8+3+1+8+1+3=32    
+            // 19: Test_signal = ...;      // 8+8+3+1+8+1+3=32 
 
-            20: Test_signal = ...;
-            21: Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
-            22: Test_signal = ...;      // 8+8+3+1+8+1+3=32    
-            23: Test_signal = ...;      // 8+8+3+1+8+1+3=32     
+            // 20: Test_signal = ...;
+            // 21: Test_signal = ...;      // 3+1+12+3+1+8+3+1=32
+            // 22: Test_signal = ...;      // 8+8+3+1+8+1+3=32    
+            // 23: Test_signal = ...;      // 8+8+3+1+8+1+3=32     
     
         
-            24: Test_signal = ...;      //  (1+3+4)*4
-            25: Test_signal = ...;      //  (1+3+4)*4
-            26: Test_signal = ...;      //  (1+3+4)*4
-            27: Test_signal = ...;      //  (1+3+4)*4
+            // 24: Test_signal = ...;      //  (1+3+4)*4
+            // 25: Test_signal = ...;      //  (1+3+4)*4
+            // 26: Test_signal = ...;      //  (1+3+4)*4
+            // 27: Test_signal = ...;      //  (1+3+4)*4
 
-            28: Test_signal = ...;      //  (1+3+4)*4
-            29: Test_signal = ...;      //  (1+3+4)*4
-            30: Test_signal = ...;      //  (1+3+4)*4
-            31: Test_signal = ...;      //  (1+3+4)*4
+            // 28: Test_signal = ...;      //  (1+3+4)*4
+            // 29: Test_signal = ...;      //  (1+3+4)*4
+            // 30: Test_signal = ...;      //  (1+3+4)*4
+            // 31: Test_signal = ...;      //  (1+3+4)*4
             
             default: Test_signal = 32'hAA55_AA55;
         endcase

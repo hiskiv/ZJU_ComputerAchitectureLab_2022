@@ -11,15 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="187630fs"></ZoomStartTime>
-      <ZoomEndTime time="228271fs"></ZoomEndTime>
-      <Cursor1Time time="224370fs"></Cursor1Time>
+      <ZoomStartTime time="231.520 ns"></ZoomStartTime>
+      <ZoomEndTime time="236.111 ns"></ZoomEndTime>
+      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="135"></NameColumnWidth>
-      <ValueColumnWidth column_width="69"></ValueColumnWidth>
+      <NameColumnWidth column_width="266"></NameColumnWidth>
+      <ValueColumnWidth column_width="126"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="32" />
+   <WVObjectSize size="36" />
    <wvobject fp_name="/core_sim/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -112,6 +112,7 @@
    <wvobject fp_name="/core_sim/core/register/register" type="array">
       <obj_property name="ElementShortName">register[1:31][31:0]</obj_property>
       <obj_property name="ObjectShortName">register[1:31][31:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject fp_name="/core_sim/core/ctrl/ALU_WAR" type="logic">
       <obj_property name="ElementShortName">ALU_WAR</obj_property>
@@ -148,5 +149,21 @@
    <wvobject fp_name="/core_sim/core/ctrl/normal_stall" type="logic">
       <obj_property name="ElementShortName">normal_stall</obj_property>
       <obj_property name="ObjectShortName">normal_stall</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ctrl/use_FU" type="array">
+      <obj_property name="ElementShortName">use_FU[2:0]</obj_property>
+      <obj_property name="ObjectShortName">use_FU[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALUout_WB" type="array">
+      <obj_property name="ElementShortName">ALUout_WB[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ALUout_WB[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/rd_ctrl_ALU" type="array">
+      <obj_property name="ElementShortName">rd_ctrl_ALU[4:0]</obj_property>
+      <obj_property name="ObjectShortName">rd_ctrl_ALU[4:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/RegWrite_ctrl_ALU" type="logic">
+      <obj_property name="ElementShortName">RegWrite_ctrl_ALU</obj_property>
+      <obj_property name="ObjectShortName">RegWrite_ctrl_ALU</obj_property>
    </wvobject>
 </wave_config>

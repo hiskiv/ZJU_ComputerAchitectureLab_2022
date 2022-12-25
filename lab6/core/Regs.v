@@ -100,11 +100,11 @@ module Regs(input clk,
 		end 
 		else begin			
 			// fill sth. here	//	write
-			if ((Wt_addr_JUMP != 5'b0) && (L_S_JUMP == 1'b1)) register[Wt_addr_JUMP] = Wt_data_JUMP;
-			if ((Wt_addr_ALU != 5'b0) && (L_S_ALU == 1'b1)) register[Wt_addr_ALU] = Wt_data_ALU;
-			if ((Wt_addr_MEM != 5'b0) && (L_S_MEM == 1'b1)) register[Wt_addr_MEM] = Wt_data_MEM;
-			if ((Wt_addr_MUL != 5'b0) && (L_S_MUL == 1'b1)) register[Wt_addr_MUL] = Wt_data_MUL;
-			if ((Wt_addr_DIV != 5'b0) && (L_S_DIV == 1'b1)) register[Wt_addr_DIV] = Wt_data_DIV;
+			if ((Wt_addr_JUMP != 5'b0) && (L_S_JUMP == 1'b1)) register[Wt_addr_JUMP] <= Wt_data_JUMP;
+			if ((Wt_addr_ALU != 5'b0) && (L_S_ALU == 1'b1)) register[Wt_addr_ALU] <= Wt_data_ALU;
+			if ((Wt_addr_MEM != 5'b0) && (L_S_MEM == 1'b1)) register[Wt_addr_MEM] <= Wt_data_MEM;
+			if ((Wt_addr_MUL != 5'b0) && (L_S_MUL == 1'b1)) register[Wt_addr_MUL] <= Wt_data_MUL;
+			if ((Wt_addr_DIV != 5'b0) && (L_S_DIV == 1'b1)) register[Wt_addr_DIV] <= Wt_data_DIV;
 		end
 	end
     	

@@ -12,7 +12,7 @@ module RAM_B(
     reg[7:0] data[0:127];
 
     initial	begin
-        $readmemh("D:/V20/Exp6/code/core/ram.hex", data);
+        $readmemh("D:\\COP\\CA-Exp6\\code\\core\\ram.hex", data);
     end
 
     always @ (negedge clka) begin
