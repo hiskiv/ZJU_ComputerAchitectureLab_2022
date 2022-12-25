@@ -76,20 +76,20 @@ module Regs(input clk,
 
 
 	// fill sth. here
-	assign rdata_A_JUMP = 		// read JUMP
-	assign rdata_B_JUMP =    	// read JUMP
+	assign rdata_A_JUMP = (R_addr_A_JUMP == 0) ? 0 : register[R_addr_A_JUMP];		// read JUMP
+	assign rdata_B_JUMP = (R_addr_B_JUMP == 0) ? 0 : register[R_addr_B_JUMP];   	// read JUMP
 
-	assign rdata_A_ALU = 		// read ALU
-	assign rdata_B_ALU =		// read ALU
+	assign rdata_A_ALU = (R_addr_A_ALU == 0) ? 0 : register[R_addr_A_ALU];		// read ALU
+	assign rdata_B_ALU = (R_addr_B_ALU == 0) ? 0 : register[R_addr_B_ALU];		// read ALU
 	
-	assign rdata_A_MEM = 		// read MEM
-	assign rdata_B_MEM = 	  	// read MEM	
+	assign rdata_A_MEM = (R_addr_A_MEM == 0) ? 0 : register[R_addr_A_MEM];		// read MEM
+	assign rdata_B_MEM = (R_addr_B_MEM == 0) ? 0 : register[R_addr_B_MEM];	  	// read MEM	
 
-	assign rdata_A_MUL = 		// read MUL
-	assign rdata_B_MUL = 		// read MUL
+	assign rdata_A_MUL = (R_addr_A_MUL == 0) ? 0 : register[R_addr_A_MUL];		// read MUL
+	assign rdata_B_MUL = (R_addr_B_MUL == 0) ? 0 : register[R_addr_B_MUL];		// read MUL
 	
-	assign rdata_A_DIV = 		// read DIV
-	assign rdata_B_DIV = 	  	// read DIV	
+	assign rdata_A_DIV = (R_addr_A_DIV == 0) ? 0 : register[R_addr_A_DIV];		// read DIV
+	assign rdata_B_DIV = (R_addr_B_DIV == 0) ? 0 : register[R_addr_B_DIV];	  	// read DIV	
 
 	//	write data
 	always @(negedge clk or posedge rst) 
@@ -99,7 +99,12 @@ module Regs(input clk,
 		    register[i] <= 0;	//i;
 		end 
 		else begin			
-		// fill sth. here	//	write
+			// fill sth. here	//	write
+			if ((Wt_addr_JUMP != 5'b0) && (L_S_JUMP == 1'b1)) register[Wt_addr_JUMP] = Wt_data_JUMP;
+			if ((Wt_addr_ALU != 5'b0) && (L_S_ALU == 1'b1)) register[Wt_addr_ALU] = Wt_data_ALU;
+			if ((Wt_addr_MEM != 5'b0) && (L_S_MEM == 1'b1)) register[Wt_addr_MEM] = Wt_data_MEM;
+			if ((Wt_addr_MUL != 5'b0) && (L_S_MUL == 1'b1)) register[Wt_addr_MUL] = Wt_data_MUL;
+			if ((Wt_addr_DIV != 5'b0) && (L_S_DIV == 1'b1)) register[Wt_addr_DIV] = Wt_data_DIV;
 		end
 	end
     	

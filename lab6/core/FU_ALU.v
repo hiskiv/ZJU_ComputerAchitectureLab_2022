@@ -20,7 +20,9 @@ module FU_ALU(
 
     always@(posedge clk) begin
         if(EN & ~state) begin // state == 0
-            ...             //to fill sth.in
+            Control <= ALUControl;             //to fill sth.in
+            A <= ALUA;
+            B <= ALUB;
             state <= 1;
         end
         else state <= 0;

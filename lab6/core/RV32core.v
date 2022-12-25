@@ -128,23 +128,35 @@ module  RV32core(
     Regs register(.clk(debug_clk),.rst(rst),
 
         //  ALU
-        .R_addr_A_ALU(  ), .rdata_A_ALU(  ),    
-        .R_addr_B_ALU(  ), .rdata_B_ALU(  ),
-        .L_S_ALU(  ),
-        .Wt_addr_ALU(  ), .Wt_data_ALU(  ),
+        .R_addr_A_ALU( rs1_addr_ctrl_ALU ), .rdata_A_ALU( rs1_data_RO_ALU ),    
+        .R_addr_B_ALU( rs2_addr_ctrl_ALU ), .rdata_B_ALU( rs2_data_RO_ALU ),
+        .L_S_ALU( RegWrite_ctrl_ALU ),
+        .Wt_addr_ALU( rd_ctrl_ALU ), .Wt_data_ALU( ALUout_WB ),
 
         //  JUMP
-        
+        .R_addr_A_JUMP( rs1_addr_ctrl_JUMP ), .rdata_A_JUMP( rs1_data_RO_JUMP ),
+        .R_addr_B_JUMP( rs2_addr_ctrl_JUMP ), .rdata_B_JUMP( rs2_data_RO_JUMP ),
+        .L_S_JUMP( RegWrite_ctrl_JUMP ),
+        .Wt_addr_JUMP( rd_ctrl_JUMP ), .Wt_data_JUMP( PC_wb_WB ),
 
         //  MEM
-        
+        .R_addr_A_MEM( rs1_addr_ctrl_MEM ), .rdata_A_MEM( rs1_data_RO_MEM ),
+        .R_addr_B_MEM( rs2_addr_ctrl_MEM ), .rdata_B_MEM( rs2_data_RO_MEM ),
+        .L_S_MEM( RegWrite_ctrl_MEM ),
+        .Wt_addr_MEM( rd_ctrl_MEM ), .Wt_data_MEM( mem_data_WB ),
 
         //  MUL
-       
+        .R_addr_A_MUL( rs1_addr_ctrl_MUL ), .rdata_A_MUL( rs1_data_RO_MUL ),
+        .R_addr_B_MUL( rs2_addr_ctrl_MUL ), .rdata_B_MUL( rs2_data_RO_MUL ),
+        .L_S_MUL( RegWrite_ctrl_MUL ),
+        .Wt_addr_MUL( rd_ctrl_MUL ), .Wt_data_MUL( mulres_WB ),
 
         //  DIV
+        .R_addr_A_DIV( rs1_addr_ctrl_DIV ), .rdata_A_DIV( rs1_data_RO_DIV ),
+        .R_addr_B_DIV( rs2_addr_ctrl_DIV ), .rdata_B_DIV( rs2_data_RO_DIV ),
+        .L_S_DIV( RegWrite_ctrl_DIV ),
+        .Wt_addr_DIV( rd_ctrl_DIV ), .Wt_data_DIV( divres_WB ),
         
-
         .Debug_addr(debug_addr[4:0]),.Debug_regs(debug_regs));
 
     MUX2T1_32 mux_imm_ALU_RO_A(.I0(rs1_data_RO_ALU),.I1(PC_ctrl_ALU),.s(ALUSrcA_ctrl),.o(ALUA_RO));
@@ -174,15 +186,15 @@ module  RV32core(
 
     // WB
 
-    REG32 reg_WB_ALU(.clk(debug_clk),.rst(rst),.CE(...),.D(...),.Q(...));       // fill sth. here
+    REG32 reg_WB_ALU(.clk(debug_clk),.rst(rst),.CE(FU_ALU_finish),.D(ALUout_FU),.Q(ALUout_WB));       // fill sth. here
 
-    REG32 reg_WB_mem(.clk(debug_clk),.rst(rst),.CE(...),.D(...),.Q(...));       // fill sth. here      
+    REG32 reg_WB_mem(.clk(debug_clk),.rst(rst),.CE(FU_mem_finish),.D(mem_data_FU),.Q(mem_data_WB));       // fill sth. here      
 
-    REG32 reg_WB_mul(.clk(debug_clk),.rst(rst),.CE(...),.D(...),.Q(...));       // fill sth. here
+    REG32 reg_WB_mul(.clk(debug_clk),.rst(rst),.CE(FU_mul_finish),.D(mulres_FU),.Q(mulres_WB));       // fill sth. here
 
-    REG32 reg_WB_div(.clk(debug_clk),.rst(rst),.CE(...),.D(...),.Q(...));       // fill sth. here
+    REG32 reg_WB_div(.clk(debug_clk),.rst(rst),.CE(FU_div_finish),.D(divres_FU),.Q(divres_WB));       // fill sth. here
     
-    REG32 reg_WB_jump(.clk(debug_clk),.rst(rst),.CE(...),.D(...),.Q(...));      // fill sth. here
+    REG32 reg_WB_jump(.clk(debug_clk),.rst(rst),.CE(FU_jump_finish),.D(PC_wb_FU),.Q(PC_wb_WB));      // fill sth. here
 
 
     
