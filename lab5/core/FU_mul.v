@@ -17,7 +17,7 @@ module FU_mul(
         if (EN && ~state) begin
             A_reg <= A;
             B_reg <= B;
-            state <= 6'h3f;
+            state <= 7'h3f;
         end
         else state <= state >> 1;
     end
